@@ -77,12 +77,15 @@ There must be at least as many instrumental variables as regressors. Namely, $m\
 ### Case with a single endogenous regressor 
 
 $$ Y_i = \beta_0+\beta_1X_{i}+\beta_{2}W_{1i}+\ldots+\beta_{1+r}W_{ri}+u_i,\: i=1,...,n $$
+
 First stage is to relate $X_i$ with the instruments $Z_i$ and exogenous variables $W_i$ and perform OLS.
 $$X_i = \pi_0+\pi_1Z_{1i}+\ldots+\pi_mZ_{mi}+\pi_{m+1}W_{1i}+\ldots+\pi_{m+r}W_{ri}+v_i$$
 Predicted values are $\hat{X_i}$
 
 Second Stage regress $Y_i$ on the predicted values
+
 $$ Y_i = \beta_0+\beta_1\hat{X_{i}}+\beta_{2}W_{1i}+\ldots+\beta_{1+r}W_{ri}+u_i,\: i=1,...,n $$
+
 Performing OLS will yield the desired TSLS estimators.
 
 ### Conditions on valid instruments
