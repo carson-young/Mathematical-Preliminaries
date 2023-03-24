@@ -637,6 +637,8 @@ aus_exports |>
     ## Warning: Removed 8 rows containing missing values (`geom_line()`).
 
 ![](forecasting-basics_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+The order of the moving average determines the smoothness of the
+trend-cycle estimate. In general, a larger order means a smoother curve.
 
 #### Moving averages of moving averages
 

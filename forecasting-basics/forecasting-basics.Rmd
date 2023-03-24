@@ -398,6 +398,8 @@ aus_exports |>
   guides(colour = guide_legend(title = "series"))
 
 ```
+The order of the moving average determines the smoothness of the trend-cycle estimate. In general, a larger order means a smoother curve.
+
 
 #### Moving averages of moving averages
 
@@ -467,7 +469,7 @@ x11_dcmp |>
   )
 
 ```
- The seasonally adjusted data is very similar to the trend-cycle component in this example, so it is hard to distinguish them on the plot.
+The seasonally adjusted data is very similar to the trend-cycle component in this example, so it is hard to distinguish them on the plot.
 
 ## SEATS method
 
