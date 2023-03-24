@@ -1,0 +1,170 @@
+---
+title: "Instrumental variables estimation and two-stage least squares"
+author: "*Carson Young*\n"
+date: "March 2023"
+output: github_document
+classoption: a4paper
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Consider the standard linear regression model with a single regressor.
+Let $\beta_1$ be the causal effect of $X$ on $Y$. The standard linear regression model relating the dependent variable $Y_i$ and regressor $X_i$ is
+
+$$ Y_i = \beta_0+\beta_1X_i+u_i,\: i=1,...,n $$
+where $u_i$ is the error term representing omitted factors that determine $Y_i$.
+
+ 
+When a single regressor $X_i$, is correlated with the error $u_i$, – the ordinarly least squares(OLS) estimator is inconsistent. That is the estimator does not converge to the true parameter value as sample size increases. This correlation can stem from various sources:
+
+1. Omitted variables
+2. Errors in variables (measurement errors in the regressors)
+3. Simultaneous causality
+
+When one or more of the above occurs. The situation is refereed  to as endogenous.
+
+ 
+ Intuitively, IVs are used when an explanatory variable of interest is correlated with the error term, in which case ordinary least squares and ANOVA give biased results.
+ 
+ Variables correlated with the error term are called *endogenous* variables
+ 
+ Variables uncorrelated with the error term are called *exogenous* variables
+ 
+## Instrument Variable 
+ A valid instrument $Z$ is related with the explanatory variable but has no independent effect on the dependent variable, allowing a researcher to uncover the causal effect of the explanatory variable on the dependent variable. Mathematically,
+ 
+ 1. Instrument relevance: $corr(Z_i,X_i) \neq 0$
+ 2. Instrument exogeneity: $corr(Z_i,U_i) = 0$
+ 
+
+## Two Stage Least Squares Estimnator 
+If an instrument $Z$ satisfies the two conditions, we can estimate $\beta_1$
+
+
+### First Stage 
+Linking $X$ andf
+
+$$X_i = \underbrace{\pi_0+\pi_1Z_1}_{\text{uncorrelated with the error } u_i}+\underbrace{v_i}_{\text {may be correlated with }u_i} $$
+The idea is to use the problem free component of $X_i$ $\pi_0+\pi_1Z_1$ and ignore $v_i$.
+
+We now simply find the usual OLS estimate for $\pi_0$ and $\pi_1$ and estimate $X_i$
+
+$$\hat{X_i} = \hat{\pi_0}+\hat{\pi_1}Z_1$$
+
+### Second Stage
+Run a standard linear regression model relating the dependent variable $Y_i$ and regressor $\hat{X_i}$. i.e we use $\hat{X_i}$ instead of $X_i$ previously.
+
+$$ Y_i = \beta_0+\beta_1\hat{X_i}+u_i,\: i=1,...,n $$
+Performing OLS yields estimators for $\beta_0$ and $\beta_1$. For clarity we denote them as ${\hat{\beta_0}^{TSLS}}$ and ${\hat{\beta_1}^{TSLS}}$
+
+## General Two Stage Least Squares Estimnator 
+Now we consider the case where there is an arbitrary number of regressors.
+
+$$ Y_i = \beta_0+\beta_1X_{1i}+\ldots +\beta_kX_{ki}+\beta_{k+1}W_{1i}+\beta_{k+r}W_{ri}+u_i,\: i=1,...,n $$
+
+* $\beta_0$, $\beta_1$,...,$\beta_{k+r}$ are the unknown regression coefficients
+* $X_{1i},...,X_{ki}$ are $k$ endogenous regressors, which could be correlted with the error $u_i$
+* $W_{1i},...,W_{ki}$ are $r$ exogenous regressors, which could be uncorrelted with the error $u_i$
+* $Z_{1i},...,W_{mi}$ are $m$ instrument variables
+
+There must be at least as many instrumental variables as regressors. Namely, $m\geq k$
+
+
+### Case with a single endogenous regressor 
+
+$$ Y_i = \beta_0+\beta_1X_{i}+\beta_{2}W_{1i}+\ldots+\beta_{1+r}W_{ri}+u_i,\: i=1,...,n $$
+First stage is to relate $X_i$ with the instruments $Z_i$ and exogenous variables $W_i$ and perform OLS.
+$$X_i = \pi_0+\pi_1Z_{1i}+\ldots+\pi_mZ_{mi}+\pi_{m+1}W_{1i}+\ldots+\pi_{m+r}W_{ri}+v_i$$
+Predicted values are $\hat{X_i}$
+
+Second Stage regress $Y_i$ on the predicted values
+$$ Y_i = \beta_0+\beta_1\hat{X_{i}}+\beta_{2}W_{1i}+\ldots+\beta_{1+r}W_{ri}+u_i,\: i=1,...,n $$
+Performing OLS will yield the desired TSLS estimators.
+
+### Conditions on valid instruments
+
+## Example- Demand for Cigarettes
+CigarettesSW data set contains cigarette consumption for the 48 continental US States from 1985–1995.As always we look at some basic statistics to get an overview of the data.
+```{R message = FALSE}
+library(AER)
+data("CigarettesSW")
+summary(CigarettesSW)
+```
+```{R}
+# compute real per capita prices
+CigarettesSW$rprice <- with(CigarettesSW, price / cpi)
+
+#  compute the sales tax
+CigarettesSW$salestax <- with(CigarettesSW, (taxs - tax) / cpi)
+
+# generate a subset for the year 1995
+c1995 <- subset(CigarettesSW, year == "1995")
+```
+```{R}
+cor(CigarettesSW[, sapply(CigarettesSW, is.numeric)])
+
+```
+Note the high correlation between sales tax and price. 
+
+
+Suppose we are interested in the model
+
+$$\ln(Q_i)=\beta_0+\beta_1\ln(P_i)+u_i$$
+where $Q_i$ is the number of cigarette packs per capital sold and $P_i$ is the after-tax average price of cigarettes in state $i$.
+
+Since price is correlated sales tax (which is not in the model), it  is sipped over to the error term. We have the perfect example to employ two stage least sqaures.
+
+```{r}
+# perform the first stage regression
+model1 <- lm(log(rprice) ~ salestax, data = c1995)
+summary(model1)
+pricepred <- model1$fitted.values
+
+```
+This gives predicted values for $P_i$
+$$\widehat{\log(P_i)} = {4.62} + {0.031} SalesTax_i$$
+Now we run stage two
+```{R}
+model2 <- lm(log(c1995$packs) ~ pricepred)
+summary(model2)
+```
+The final model is 
+$$\ln(Q_i)=9.72-1.08\ln(P_i)$$
+
+Note the standard errors reported for the second-stage regression, does not take into account using predictions from the first-stage regression as regressors in the second-stage regression.The errors are invalid.
+
+
+Like everything, there is an R package that does it all.
+
+```{R}
+model3 <- ivreg(log(packs) ~ log(rprice) | salestax, data = c1995)
+summary(model3)
+
+```
+TSLS suggest demand for cigarettes are elastic. An 1% increase in price reduceds consumption by 1.08%. Obviosuly common sense tells us something is off.
+
+Indeed, demand of cigareetes probably depends on income as well, but it was not included in the model, so its effect is once again "spilled" to the error term and not accounted for. Plausible that this TSLS model estimate is biased
+
+### Including income
+state income, which impact the demand for cigarettes and correlate with the sales tax. States with high personal income tend to generate tax revenues by income taxes and less by sales taxes. Consequently, state income should be included in the regression model as a exogenous variable. 
+
+$$\log(Q_) = \beta_0 + \beta_1 \log(P_i) + \beta_2 \log(income_i) + u_i$$
+```{R}
+# add rincome to the dataset
+CigarettesSW$rincome <- with(CigarettesSW, income / population / cpi)
+
+c1995 <- subset(CigarettesSW, year == "1995")
+# estimate the model
+model4 <- ivreg(log(packs) ~ log(rprice) + log(rincome) | log(rincome) + 
+                    salestax, data = c1995)
+summary(model4)
+```
+The final fitted model
+$$\widehat{\log(Q_i)} = 9.42-1.14\log(P_i)+0.21\log(income_i)$$
+We should not trust our estimates naïvely. Checking the validity of the instruments and knowledge of the domain will inform us whether this model is appropriate. 
+
+## Bibliography
+Stock, J. H., & Watson, M. W. (2019). *Introduction to econometrics, Global edition.* Pearson Education.
+
+Hanck, C., Arnold, M., Gerber, A., & Schmelzer, M. (2019). *Introduction to Econometrics with R.* University of Duisburg-Essen.
