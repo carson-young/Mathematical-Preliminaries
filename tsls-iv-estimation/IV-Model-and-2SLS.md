@@ -9,8 +9,10 @@ Let $\beta_1$ be the causal effect of $X$ on $Y$. The standard linear
 regression model relating the dependent variable $Y_i$ and regressor
 $X_i$ is
 
-$$ Y_i = \beta_0+\beta_1X_i+u_i,\: i=1,...,n $$ where $u_i$ is the error
-term representing omitted factors that determine $Y_i$.
+$$ Y_i = \beta_0+\beta_1X_i+u_i,\: i=1,...,n $$
+
+where $u_i$ is the error term representing omitted factors that
+determine $Y_i$.
 
 When a single regressor $X_i$, is correlated with the error $u_i$, – the
 ordinarly least squares(OLS) estimator is inconsistent. That is the
@@ -54,6 +56,7 @@ $\beta_1$
 Linking $X$ andf
 
 $$X_i = \underbrace{\pi_0+\pi_1Z_1}_{\text{uncorrelated with the error } u_i}+\underbrace{v_i}_{\text {may be correlated with }u_i} $$
+
 The idea is to use the problem free component of $X_i$ $\pi_0+\pi_1Z_1$
 and ignore $v_i$.
 
@@ -68,9 +71,11 @@ Run a standard linear regression model relating the dependent variable
 $Y_i$ and regressor $\hat{X_i}$. i.e we use $\hat{X_i}$ instead of $X_i$
 previously.
 
-$$ Y_i = \beta_0+\beta_1\hat{X_i}+u_i,\: i=1,...,n $$ Performing OLS
-yields estimators for $\beta_0$ and $\beta_1$. For clarity we denote
-them as ${\hat{\beta_0}^{TSLS}}$ and ${\hat{\beta_1}^{TSLS}}$
+$$ Y_i = \beta_0+\beta_1\hat{X_i}+u_i,\: i=1,...,n $$
+
+Performing OLS yields estimators for $\beta_0$ and $\beta_1$. For
+clarity we denote them as ${\hat{\beta_0}^{TSLS}}$ and
+${\hat{\beta_1}^{TSLS}}$
 
 ## General Two Stage Least Squares Estimnator
 
