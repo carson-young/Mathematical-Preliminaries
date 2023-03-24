@@ -573,7 +573,7 @@ the economy rather than the seasonal variation.
 
 A moving average of order $m$ can be written as
 
-$$\hat{T_t} = \frac{1}{m}  \sum_{j = -k}^{k} y_{t+j} \\$$
+$$\hat{T_t} = \frac{1}{m}  \sum_{j = -k}^{k} y_{t+j} $$
 
 where $m = 2k + 1$
 
