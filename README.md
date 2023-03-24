@@ -3,7 +3,7 @@
 ## Contents
 * Two-Stage Least Sqaures and Instrument Variables
 * Forecasting Basics
-    ** Introduction to tsibble objects
-    ** Visulisations of time series data
-    ** Moving averages
-    ** Time series decomposition
+** Introduction to tsibble objects
+** Visulisations of time series data
+** Moving averages
+** Time series decomposition
