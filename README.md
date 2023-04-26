@@ -7,3 +7,6 @@
     * Visulisations of time series data
     * Moving averages
     * Time series decomposition
+** Forecasting Examples
+    * Population forecast
+    * Stock price forecast
