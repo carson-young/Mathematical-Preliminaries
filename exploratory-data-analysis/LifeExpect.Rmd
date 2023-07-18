@@ -1,0 +1,286 @@
+---
+title: "Factors influencing life expectancy"
+author: "Carson Young"
+date: '26 November 2022'
+output: pdf_document
+classoption: a4paper
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Outline and thought process
+Here are some of my initial thoughts on the steps to analyse this dataset.
+
+- **Data Exploration**- Understanding the variables and correlations between them.
+- **Data Cleaning**- Correcting inconsistency or missing data.
+- **Feature Selection**- There is a mix of continuous and categorical variables, 22 in total.
+We need to consider which combination affects life expectancy the most. 
+- **Models and visualizations**- We could try linear regression and k-means clustering. 
+- **Mathematical tools**- Could use correlation matrices, model section algorithms, scatter plots and principal component analysis.
+- **Data Analysis**- What does the data and models tell us in plain English?
+What are the key contributors to life expectancy? Do countries of similar life expectancy share similar attributes?
+
+
+We will utilise R libraries and omit mathematical details for clarity.
+
+It is common to split the data into train and test sets to scrutinise the relevance of models. For brevity, we will only focus on understanding the implications of the data.
+
+## Data Exploration
+Begin by importing the dataset and constructing basic descriptive statistics.  
+The dataset contains data from 193 countries, with 22 features. These include economic, education and health factors.
+```{r include = FALSE}
+setwd("C:/Users/Carson/Desktop")
+library("performance")
+```
+```{r}
+life <- read.csv("Life Expectancy Data.csv")
+str(life)
+```
+Year and country are the categorical variables. 
+
+```{R}
+summary(life)
+```
+Note down a few key facts
+
+- Mean life expectancy is 69.22
+- Mean years of schooling is 12
+- Mean adulat mortality rate is 164.8 (per 1000)
+
+
+
+## Data Cleaning
+There are missing values in many columns (NA's above). There are many ways to fix this, each with different implications. 
+We shall use a straightforward way- **imputation by median** since the missing values account for less than half the rows. 
+```{r}
+life$Life.expectancy[is.na(life$Life.expectancy)] <- 
+  +median(life$Life.expectancy,  na.rm = TRUE)
+life$Adult.Mortality[is.na(life$Adult.Mortality)] <- 
+  +median(life$Adult.Mortality,  na.rm = TRUE)
+life$Alcohol[is.na(life$Alcohol)] <- median(life$Alcohol,  na.rm = TRUE)
+life$Hepatitis.B[is.na(life$Hepatitis.B)] <- 
+  +median(life$Hepatitis.B,  na.rm = TRUE)
+life$BMI[is.na(life$BMI)] <- median(life$BMI,  na.rm = TRUE)
+life$Polio[is.na(life$Polio)] <- median(life$Polio,  na.rm = TRUE)
+life$Total.expenditure[is.na(life$Total.expenditure)] <- 
+  +median(life$Total.expenditure,  na.rm = TRUE)
+life$Diphtheria[is.na(life$Diphtheria)] <- 
+  +median(life$Diphtheria,  na.rm = TRUE)
+life$GDP[is.na(life$GDP)] <- median(life$GDP,  na.rm = TRUE)
+life$Population[is.na(life$Population)] <- 
+  +median(life$Population,  na.rm = TRUE)
+life$thinness..1.19.years[is.na(life$thinness..1.19.years)] <- 
+  +median(life$thinness..1.19.years,  na.rm = TRUE)
+life$thinness.5.9.years[is.na(life$thinness.5.9.years)] <- 
+  +median(life$thinness.5.9.years,  na.rm = TRUE)
+life$Income.composition.of.resources[is.na(life$Income.composition.of.resources)]<-
+  +median(life$Income.composition.of.resources,  na.rm = TRUE)
+life$Schooling[is.na(life$Schooling)] <- median(life$Schooling,  na.rm = TRUE)
+```
+
+
+```{r include=FALSE}
+# install.packages("corrplot")
+library(corrplot)
+```
+\newpage
+### Correlation Matrix
+The goal here is to identify variables that are correlated.
+```{r, fig.width = 11, fig.height = 11}
+life_numerical = subset(life, select = -c(Country,Status,Year) )
+corrmatrix = cor(life_numerical,use = "complete.obs")
+corrplot(corrmatrix,tl.srt=70,tl.col="black")
+```
+The size of the circle corresponds to the level of correlation.
+Some obvious correlations are expected:
+
+- Infant deaths vs under five deaths
+- GDP vs percentage expenditure
+- Adult mortality vs life expectancy
+- Thinness 1-19 years vs thinness 5-9 years
+
+Strong correlation can cause problems when running regression models. A solution is to drop one variable in each highly correlated pair. The **variance inflation factor** can tell us which variables to drop.
+
+
+```{r}
+head(corrmatrix,1)
+```
+We expect adult mortality, schooling, income composition of resources, BMI and HIV.AIDS to be the more significant contributors.
+
+Less significant factors include population, measles, hepatitis B and infant deaths.
+
+Infant deaths are worth investigating as we would expect from common sense that a high infant mortality rate lowers life expectancy. A possible explanation is the highly skewed nature of this feature. Around 80% of rows have an infant mortality rate of zero. Hence, it does not contribute much to life expectancy. Reducing child mortality is one of the millennium goals and we expect this figure to decrease further. The same reasoning applies to measles and hepatitis B.
+
+## Models and visulisation
+### Variance inflation factor
+Remove one feature from each colinear pair
+```{r, include = FALSE}
+library(car)
+```
+```{r}
+life$Status <- factor(life$Status)
+model <- lm(Life.expectancy~.-Country,data=life)
+vif(model)
+```
+Drop the following features since they have the higher VIF:
+
+- Infant deaths
+- GDP
+- thinness 5-9 years
+
+### Linear regression
+Life expectancy is our response variable. The other variables are predictors.
+
+```{r}
+model2 <- lm(Life.expectancy~.-Country -infant.deaths -GDP -thinness.5.9.years,data=life)
+summary(model2)
+```
+
+### Select features using stepwise selection
+
+```{r}
+model3 <- step(model2, scope=~., direction = "both", trace = FALSE)
+summary(model3)
+
+```
+Alcohol is a factor dropped. Consumption of alcohol alone does not reflect the health of its people. In less developed countries alcohol could be a social issue, whereas in developed countries it could be a 'luxury' that is enjoyed. This makes it a poor indicator of life expectancy. Perhaps if we had alcohol abuse data, that may be a better indicator.
+
+The final selected model has **15 features**. These are the key contributors to life expectancy. Features such as population, thinness 1-19 yr and total expenditure have different significant levels and slightly weaker evidence to include them. Other feature selection algorithms may remove these and reduce the model to **12 features**.
+
+\newpage
+
+### Diagnostic plots
+This section is to verify the assumptions of a linear model. Included just for completeness.
+Look for linear, independent and constant variance in the residual plots.
+Look for points with high leverage, cook's distance or residuals.
+```{r,  fig.width = 11, fig.height = 11}
+par(mfrow=c(2,2))
+plot(model3)
+```
+Linear regression assumptions met.
+```{r,fig.width = 11, fig.height = 16}
+# Using performance package
+check_model(model3)
+```
+
+\newpage
+### Principal component analysis
+Since there are 22 variables, it is impractical to plot every single variable against each other and attempt to deduce patterns.
+
+Instead, principle component analysis is a clever transformation that captures most of the information in two new variables. Namely, the first two **principal components**. 
+
+```{r}
+pca <- prcomp(life_numerical,scale=TRUE)
+summary(pca)
+```
+We can see the first two component captures around half the variance (46%) in the entire dataset.
+
+```{r, fig.width = 8, fig.height = 11}
+library(ggfortify)
+require(gridExtra)
+plot1 <- autoplot(pca,data=life,colour="Life.expectancy")
+plot2 <- autoplot(pca,data=life,colour="Schooling")
+plot3 <- autoplot(pca,data=life,colour="Status")
+grid.arrange(plot1, plot2, plot3, nrow=3)
+
+```
+We can see a striking connection between life expectancy and the status of a country. The **clustering of country status agrees with the clustering of life expectancy**.
+Since we are plotting against the two principal components (they are linear combinations of the predictors), we can infer **countries of similar life expectancy share similar attributes**.
+
+Although schooling does not directly affect life expectancy. It is reasonable to assume countries with poor education systems also have a poor healthcare systems and a lower standard of living. Hence we also observe a similar clustering pattern.
+
+A few outliers are coming from developing countries. This could be due to missing or incorrect data. Data from some developing countries are incomplete and imputation may have distorted the data.
+
+
+### K-means Clustering
+```{r}
+library(cluster)
+life_numerical_scale <- scale(life_numerical)
+lifekmeans <- kmeans(life_numerical_scale, 4)
+autoplot(lifekmeans, data = life_numerical_scale)
+```
+Going through the which cluster each data point was assigned to Reveals:
+
+- Cluster 2- Australia, Denmark, Canada, New Zealand
+- Cluster 4- Estonia, Fiji, Mexico
+- Cluster 1 & 3- Gambia, Malawai, Equatorial Guinea
+
+These groupings roughly describes the level of human development and life expectancy.
+
+\newpage
+### Cluster plots
+```{r, fig.width = 8, fig.height = 10}
+plot1 <- ggplot() +
+  geom_point(data = life, 
+             mapping = aes(x = Adult.Mortality, y = Life.expectancy, 
+                                  colour = Status))
+
+plot2 <- ggplot() +
+  geom_point(data = life, 
+             mapping = aes(x = Schooling, y = Life.expectancy, 
+                                  colour = Status))
+plot3 <- ggplot() +
+  geom_point(data = life, 
+             mapping = aes(x = HIV.AIDS, y = Life.expectancy, 
+                                  colour = Status))
+plot4 <- ggplot() +
+  geom_point(data = life, 
+             mapping = aes(x = Income.composition.of.resources, y = Life.expectancy, 
+                                  colour = Status))
+plot5 <- ggplot() +
+  geom_point(data = life, 
+             mapping = aes(x = percentage.expenditure, y = Life.expectancy, 
+                                  colour = Status))
+plot6 <- ggplot() +
+  geom_point(data = life, 
+             mapping = aes(x = Measles, y = Life.expectancy, 
+                                  colour = Status))
+
+grid.arrange(plot1, plot2, plot3,plot4,plot5, plot6,ncol=2, nrow=3)
+```
+\newpage
+
+As expected, a higher adult mortality rate is related to a lower life expectancy. Hence the strong negative trend.
+
+Schooling was discussed in the previous section. Some minor trends look like vertical lines. These are due to the missing data where years of schooling were set to zero or as the median of the entire dataset. However, ignoring these points, we can still observe a clear separation between developed and developing countries.
+
+HIV.AIDS and Measles both have a similar characteristic spread. We see developed nations forming a straight line cluster on the top left of the graph. Indicating high life expectancy and extremely low levels of these diseases. High rates of disease is linked to lower life expectancy.
+
+Income composition of resources in this dataset is a form of the human development index. Hence the strong linear trend. Again we see the vertical trends caused by data issues.
+
+Percentage expenditure (on healthcare) shows again a clear clustering of developing and developed nations. Developing nations spend a small proportion of their GDP on healthcare. Some developed nations seem to spend a small proportion of their GDP as well, but this could be due to a very high GDP.
+
+
+
+## Conclusion
+
+### What does the data and models tell us in plain English?
+
+Life expectancy depends on a few contributors (described below). From the regression models and visulisations, we can see countries of similar life expectancy share similar attributes. Developed countries have a higher life expectancy. They have longer years of schooling, more spending on healthcare and lower disease/mortality rates. The opposite can be said for developing countries.
+
+To improve a country's life expectancy, improvements must be made to these factors. These factors are tied to economic development. The question of how shall be left with policy makers.
+
+
+### What are the key contributors to life expectancy? 
+
+Using the regression model and cluster plots, the main factors influencing life expectancy are:
+
+- Status (Developing vs developed)
+- Adult mortality
+- Percentage expenditure (on health)
+- Hepatitis B
+- Measles 
+- BMI
+- Under five deaths
+- Polio
+- Diphtheria
+- HIV.AIDS
+- Income composition of resources
+- Schooling
+
+These are a mix of economic, health and education indicators.They all relate to the welfare of humans.
+
+
+
