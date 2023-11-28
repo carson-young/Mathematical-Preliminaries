@@ -1,0 +1,272 @@
+---
+title: "Penguin Dataset Exploratory Analysis"
+author: "Carson Young"
+date: "November 2023"
+output: pdf_document
+classoption: a4paper
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+ggplot2::theme_set(ggplot2::theme_minimal())
+load("penguins.RData")
+```
+
+# Correlation Matrix and Plots
+```{r warning=FALSE, message=FALSE}
+head(penguins)
+glimpse(penguins)
+
+
+# Correlation Matrix ------------------------------------------------------
+library(corrr)
+penguins_corr <- penguins %>%
+  dplyr::select(body_mass_g, ends_with("_mm")) %>%
+  correlate() %>%
+  rearrange()
+penguins_corr
+
+autoplot(penguins_corr, triangular = "lower") + 
+  labs(title = "Penguin size, Palmer Station LTER",
+  subtitle = "Correlation Matrix",
+)
+
+
+# Correlation Plots -------------------------------------------------------
+penguins %>%
+  select(species, body_mass_g, ends_with("_mm")) %>% 
+  GGally::ggpairs(aes(color = species)) +
+  scale_colour_manual(values = c("darkorange","purple","cyan4")) +
+  scale_fill_manual(values = c("darkorange","purple","cyan4"))
+
+
+```
+
+# Scatter Plots
+```{r warning=FALSE, message=FALSE}
+# Example Scatter Plots ------------------------------------------------------
+# Penguin mass vs. flipper length
+mass_flipper <- ggplot(data = penguins, 
+                       aes(x = flipper_length_mm,
+                           y = body_mass_g)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin size, Palmer Station LTER",
+       subtitle = "Flipper length and body mass for Adelie, Chinstrap and Gentoo Penguins",
+       x = "Flipper length (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.2, 0.7),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+mass_flipper
+
+# Penguin mass vs. bill depth
+mass_depth <- ggplot(data = penguins, 
+                       aes(x = flipper_length_mm,
+                           y = bill_depth_mm)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin size, Palmer Station LTER",
+       subtitle = "Flipper length and bill depth for Adelie, Chinstrap and Gentoo Penguins",
+       x = "Bill depth (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.8),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+mass_depth
+
+# Penguin mass vs. bill length
+mass_length <- ggplot(data = penguins, 
+                     aes(x = flipper_length_mm,
+                         y = bill_length_mm)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin size, Palmer Station LTER",
+       subtitle = "Flipper length and bill length for Adelie, Chinstrap and Gentoo Penguins",
+       x = "Bill length (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.8),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+mass_length 
+
+
+
+# Flipper length vs. bill length
+flipper_bill <- ggplot(data = penguins,
+                       aes(x = flipper_length_mm,
+                           y = bill_length_mm)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Flipper and bill length",
+       subtitle = "Dimensions for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "Flipper length (mm)",
+       y = "Bill length (mm)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+flipper_bill
+
+# Bill length vs. depth
+bill_len_dep <- ggplot(data = penguins,
+                       aes(x = bill_length_mm,
+                           y = bill_depth_mm,
+                           group = species)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, aes(color = species)) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin bill dimensions",
+       subtitle = "Bill length and depth for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "Bill length (mm)",
+       y = "Bill depth (mm)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+bill_len_dep
+
+# Flipper length vs. bill depth
+flipper_bill_depth <- ggplot(data = penguins,
+                       aes(x = flipper_length_mm,
+                           y = bill_depth_mm,
+                           group = species)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Flipper and bill depth",
+       subtitle = "Dimensions for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "flipper_length_mm",
+       y = "Bill depth (mm)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+flipper_bill_depth
+```
+
+# Principal Componenet Analysis
+```{r warning=FALSE, message=FALSE}
+# Principal component analysis --------------------------------------------
+library(recipes)
+penguin_recipe <-
+  recipe(~., data = penguins) %>% 
+  update_role(species, island, sex, year, new_role = "id") %>% 
+  step_naomit(all_predictors()) %>% 
+  step_normalize(all_predictors()) %>%
+  step_pca(all_predictors(), id = "pca") %>% 
+  prep()
+
+
+# PCA variable loadings
+penguin_pca <- 
+  penguin_recipe %>% 
+  tidy(id = "pca", type = "coef") 
+penguin_pca
+
+# PCA variances
+penguin_recipe %>% 
+  tidy(id = "pca", type = "variance") 
+
+# Plot PCA variances
+penguin_recipe %>% 
+  tidy(id = "pca", type = "variance") %>% 
+  dplyr::filter(terms == "percent variance") %>% 
+  ggplot(aes(x = component, y = value)) + 
+  geom_col(fill = "#b6dfe2") + 
+  xlim(c(0, 5)) + 
+  labs(title = "PCA variances explained",
+       y = ("% of total variance"))
+
+
+# Plot PCA loadings 
+penguin_pca %>%
+  mutate(terms = tidytext::reorder_within(terms, 
+                                          abs(value), 
+                                          component)) %>%
+  ggplot(aes(abs(value), terms, fill = value > 0)) +
+  geom_col() +
+  facet_wrap(~component, scales = "free_y") +
+  tidytext::scale_y_reordered() +
+  scale_fill_manual(values = c("#b6dfe2", "#0A537D")) +
+  labs(
+    x = "Absolute value of contribution",
+    y = NULL, fill = "Positive?"
+  ) 
+
+# get pca loadings into wider format
+pca_wider <- penguin_pca %>% 
+  tidyr::pivot_wider(names_from = component, id_cols = terms)
+
+# define arrow style
+arrow_style <- arrow(length = unit(.05, "inches"),
+                     type = "closed")
+
+
+pca_plot <-
+  juice(penguin_recipe) %>%
+  ggplot(aes(PC1, PC2)) +
+  geom_point(aes(color = species, shape = species), 
+             alpha = 0.8, 
+             size = 2) +
+  scale_colour_manual(values = c("darkorange","purple","cyan4")) 
+
+pca_plot +
+  geom_segment(data = pca_wider,
+               aes(xend = PC1, yend = PC2), 
+               x = 0, 
+               y = 0, 
+               arrow = arrow_style) + 
+  geom_text(data = pca_wider,
+            aes(x = PC1, y = PC2, label = terms), 
+            hjust = 0, 
+            vjust = 1,
+            size = 5, 
+            color = '#0A537D') 
+
+```
+
+# Bibliography
+Horst AM, Hill AP, Gorman KB (2020). palmerpenguins: Palmer Archipelago (Antarctica) penguin data. R package version 0.1.0. https://allisonhorst.github.io/palmerpenguins/. doi: 10.5281/zenodo.3960218.
